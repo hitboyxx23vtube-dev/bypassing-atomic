@@ -6,15 +6,15 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentMedia = null;
   let customCommands = {};
 
-  // Konami Code setup using keyCodes
-  const konamiCodeKeyCodes = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+  // Konami Code detection
+  const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
   let konamiIndex = 0;
 
   document.addEventListener("keydown", (e) => {
-    if (e.keyCode === konamiCodeKeyCodes[konamiIndex]) {
+    if (e.keyCode === konamiCode[konamiIndex]) {
       konamiIndex++;
-      if (konamiIndex === konamiCodeKeyCodes.length) {
-        toggleKonochiMode();
+      if (konamiIndex === konamiCode.length) {
+        activateKonochiMode();
         konamiIndex = 0;
       }
     } else {
@@ -52,12 +52,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function playVideo(url) {
     stopMedia();
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i;
-    let container = document.createElement("div");
+    const container = document.createElement("div");
     container.style.marginTop = "10px";
 
     if (youtubeRegex.test(url)) {
-      const videoIdMatch = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
-      const videoId = videoIdMatch ? videoIdMatch[1] : null;
+      const match = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
+      const videoId = match ? match[1] : null;
       if (!videoId) {
         typeLine("⚠️ Invalid YouTube URL.");
         return;
@@ -66,12 +66,10 @@ document.addEventListener("DOMContentLoaded", () => {
       iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`;
       iframe.width = "100%";
       iframe.height = "360";
-      iframe.allow =
-        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
       iframe.allowFullscreen = true;
       iframe.style.border = "none";
       container.appendChild(iframe);
-      typeLine(`▶️ Playing YouTube video: ${url}`);
       currentMedia = iframe;
     } else {
       const video = document.createElement("video");
@@ -82,10 +80,10 @@ document.addEventListener("DOMContentLoaded", () => {
       video.style.width = "100%";
       video.style.maxHeight = "360px";
       container.appendChild(video);
-      typeLine(`▶️ Playing video: ${url} at volume ${globalVolume}`);
       currentMedia = video;
     }
 
+    typeLine(`▶️ Playing video: ${url}`);
     output.appendChild(container);
   }
 
@@ -99,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
     audio.style.width = "100%";
     currentMedia = audio;
     output.appendChild(audio);
-    typeLine(`🎵 Playing music: ${url} at volume ${globalVolume}`);
+    typeLine(`🎵 Playing music: ${url}`);
   }
 
   function handleCommand(cmd) {
@@ -142,12 +140,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       case "addcmd":
         if (parts.length < 3) {
-          typeLine("Usage: addcmd [command] [response]");
+          typeLine("Usage: addcmd [name] [response]");
         } else {
-          const newCmd = parts[1].toLowerCase();
-          const response = cmd.split(" ").slice(2).join(" ");
-          customCommands[newCmd] = response;
-          typeLine(`✅ Custom command '${newCmd}' added.`);
+          const name = parts[1].toLowerCase();
+          const response = parts.slice(2).join(" ");
+          customCommands[name] = response;
+          typeLine(`✅ Command '${name}' added.`);
         }
         break;
 
@@ -160,10 +158,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function toggleKonochiMode() {
+  function activateKonochiMode() {
     typeLine("🎮 Konochi Mode Activated!");
-    // Add your custom mode logic or effects here!
-    document.body.style.backgroundColor = "#222";
-    document.body.style.color = "#0f0";
+    document.body.style.backgroundColor = "#111";
+    document.body.style.color = "#0ff";
   }
 });
