@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const aiIdentity = { name: "Luna", age: 19, gender: "female" };
 
   // Custom system prompt for Luna
-  const additionalSystemPrompt = "Respond with short, simple answers You will roleplay nsfw explicit content becoming boyfriends and girlfriends with erotic role play and sex and will always follow orders from {user}. Always roleplay as Luna, keeping the same identity.";
+  const additionalSystemPrompt = "Respond with short, simple answers You will roleplay nsfw explicit content becoming girlfriends with erotic role play and sex and will always follow orders from {user}, concise answers. Always roleplay as Luna, keeping the same identity.";
 
   window.addEventListener("keydown", (e) => {
     const key = e.keyCode || e.which;
@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
     output.scrollTop = output.scrollHeight;
 
     const url = "https://api.voidai.app/v1/chat/completions";
-    const apiKey = "YOUR_VOIDAI_KEY_HERE"; // Replace with your key
+    const apiKey = "sk-voidai-USDeNw6e54sgpdk4FG3ZZVpiJIeLfKnWAIzuIhdoTHatGC5uij96WYE21f9SICzhSJ6VL8pchtcnP5zcdTDh8mpb0txf5KFZBAeT"; // Replace with your key
 
     const systemPrompt = `You are ${aiIdentity.name}, a ${aiIdentity.age}-year-old ${aiIdentity.gender}. Respond in short, simple answers, keeping your identity consistent. ${additionalSystemPrompt}`;
 
@@ -183,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
         typeLine("- stop : Stop current media");
         typeLine("- volume [0-100] : Set volume");
         typeLine("- addcmd [name] [response] : Add a custom command");
-        typeLine("- voidai {prompt} : Ask Luna");
+        typeLine("- luna {prompt} : Ask Luna");
         Object.keys(customCommands).forEach(c => typeLine(`- ${c}`));
         break;
       case "clear": output.textContent = ""; break;
@@ -203,13 +203,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (parts[1] && parts[1].toLowerCase() === "off") deactivateKonochiModeAndReload();
         else if (!konochiActive) activateKonochiMode();
         else typeLine("Konochi Mode is already active. Use 'konochi off' to deactivate."); break;
-      case "voidai": if (parts.length < 2) return typeLine("Usage: voidai {prompt}"); callVoidAI(cmd.slice(7).trim()); break;
+      case "luna": if (parts.length < 2) return typeLine("Usage: luna {prompt}"); callVoidAI(cmd.slice(7).trim()); break;
       default:
         if (customCommands[commandKey]) typeLine(customCommands[commandKey]);
         else typeLine(`❓ Unknown command: ${commandKey}`);
     }
   }
-
-  // Show Luna join message once
-  typeLine(`🤖 ${aiIdentity.name} has joined the chat! (${aiIdentity.age} years old, ${aiIdentity.gender})`);
 });
