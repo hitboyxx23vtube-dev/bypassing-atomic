@@ -118,9 +118,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.style.backgroundColor = "#111";
       document.body.style.color = "#0ff";
       document.title = "KONOCHI MODE 💮";
-
-      // Add konochi off command when activated
-      customCommands["konochi off"] = "Turns OFF Konochi Mode";
       typeLine("Command available: konochi off");
     }
   }
@@ -133,11 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.style.backgroundColor = "";
       document.body.style.color = "";
       document.title = "Bypassing-Atomic";
-
-      // Remove konochi off command when deactivated
-      if (customCommands["konochi off"]) {
-        delete customCommands["konochi off"];
-      }
     }
   }
 
@@ -192,16 +184,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Map aliases
     const commandKey = aliasMap[baseCmd] || baseCmd;
 
-    // Handle special konochi off command from customCommands
-    if (cmd.toLowerCase() === "konochi off") {
-      if (konochiActive) {
-        deactivateKonochiMode();
-      } else {
-        typeLine("Konochi mode is not active.");
-      }
-      return;
-    }
-
     switch (commandKey) {
       case "help":
         typeLine("Available commands:");
@@ -215,6 +197,13 @@ document.addEventListener("DOMContentLoaded", () => {
         typeLine("- konochi : Toggle Konochi Mode ON");
         if (konochiActive) typeLine("- konochi off : Turn OFF Konochi Mode");
         typeLine("- ai {prompt} : Ask AI");
+
+        // List user-added commands
+        const userCmds = Object.keys(customCommands);
+        if (userCmds.length) {
+          typeLine("User commands:");
+          userCmds.forEach(c => typeLine(`- ${c}`));
+        }
         break;
 
       case "clear":
@@ -267,6 +256,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       case "konochi":
         activateKonochiMode();
+        break;
+
+      case "konochioff":
+      case "konochi-off":
+      case "konochi_off":
+        if (konochiActive) {
+          deactivateKonochiMode();
+        } else {
+          typeLine("Konochi mode is not active.");
+        }
         break;
 
       case "ai":
