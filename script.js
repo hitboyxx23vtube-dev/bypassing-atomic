@@ -6,12 +6,15 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentMedia = null;
   let customCommands = {};
 
-  // Konami Code detection
+  // Konami Code keyCodes: ↑ ↑ ↓ ↓ ← → ← → B A
   const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
   let konamiIndex = 0;
 
-  document.addEventListener("keydown", (e) => {
-    if (e.keyCode === konamiCode[konamiIndex]) {
+  // Listen on window for Konami code keys
+  window.addEventListener("keydown", (e) => {
+    const key = e.keyCode || e.which;
+
+    if (key === konamiCode[konamiIndex]) {
       konamiIndex++;
       if (konamiIndex === konamiCode.length) {
         activateKonochiMode();
@@ -27,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const command = input.value.trim();
       if (command !== "") {
         output.innerHTML += `<div class="command">> ${command}</div>`;
-        handleCommand(command.toLowerCase());
+        handleCommand(command);
         input.value = "";
         output.scrollTop = output.scrollHeight;
       }
@@ -43,8 +46,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function stopMedia() {
     if (currentMedia) {
-      currentMedia.pause?.();
-      currentMedia.remove?.();
+      if (typeof currentMedia.pause === "function") currentMedia.pause();
+      if (typeof currentMedia.remove === "function") currentMedia.remove();
       currentMedia = null;
     }
   }
@@ -101,10 +104,29 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleCommand(cmd) {
-    const parts = cmd.split(" ");
-    const baseCmd = parts[0];
+    if (!cmd || cmd.trim() === "") return;
+
+    const parts = cmd.trim().split(/\s+/);
+    if (parts.length === 0) return;
+
+    const baseCmd = parts[0].toLowerCase();
 
     switch (baseCmd) {
+      case "help":
+        typeLine("Available commands:");
+        typeLine("- help : Show this help message");
+        typeLine("- clear : Clear the terminal output");
+        typeLine("- playvideo [url] : Play a YouTube or video URL");
+        typeLine("- playmusic [url] : Play audio/music URL");
+        typeLine("- stop : Stop current media");
+        typeLine("- volume [0-100] : Set volume");
+        typeLine("- addcmd [name] [response] : Add a custom command");
+        break;
+
+      case "clear":
+        output.textContent = "";
+        break;
+
       case "playvideo":
         if (parts.length < 2) {
           typeLine("Usage: playvideo [url]");
@@ -133,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
           typeLine("Usage: volume [0-100]");
         } else {
           globalVolume = Math.max(0, Math.min(100, parseInt(parts[1])));
-          if (currentMedia) currentMedia.volume = globalVolume / 100;
+          if (currentMedia && "volume" in currentMedia) currentMedia.volume = globalVolume / 100;
           typeLine(`🔊 Volume set to ${globalVolume}`);
         }
         break;
