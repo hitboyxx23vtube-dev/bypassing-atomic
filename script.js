@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function callAI(prompt) {
-    const apiKey = "AIzaSyCTEJO-_5AtzH50CWRO6p-5vDJ5RbmJ1V0"; // Replace with your own key!
+    const apiKey = "AIzaSyCTEJO-_5AtzH50CWRO6p-5vDJ5RbmJ1V0"; // Replace with your key
     const url =
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
@@ -113,7 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function handleCommand(cmd) {
     typeLine(`> ${cmd}`);
-
     const parts = cmd.trim().split(/\s+/);
     const baseCmd = parts[0].toLowerCase();
 
@@ -132,9 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
 
       case "status":
-        typeLine(
-          "Bypassing... 🔐\nStatus: ATOMIC CORE BREACHED\nEncryption Layers: 0/7"
-        );
+        typeLine("Bypassing... 🔐\nStatus: ATOMIC CORE BREACHED\nEncryption Layers: 0/7");
         break;
 
       case "clear":
@@ -189,9 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       case "unlock":
         if (parts[1] && parts[1].toLowerCase() === "atomicpass") {
-          typeLine(
-            "🔓 Access Granted: AtomicPass Enabled\nWelcome to the core systems."
-          );
+          typeLine("🔓 Access Granted: AtomicPass Enabled\nWelcome to the core systems.");
         } else {
           typeLine("Unknown unlock code.");
         }
@@ -230,18 +225,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Konami code: Up Up Down Down Left Right Left Right B A
   const konamiCode = [
-    "ArrowUp",
-    "ArrowUp",
-    "ArrowDown",
-    "ArrowDown",
-    "ArrowLeft",
-    "ArrowRight",
-    "ArrowLeft",
-    "ArrowRight",
-    "b",
-    "a",
+    "ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown",
+    "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight",
+    "b", "a"
   ];
   let konamiIndex = 0;
 
@@ -268,6 +255,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Focus input on load
   input.focus();
 });
