@@ -10,38 +10,42 @@ body {
   flex-direction: column;
 }
 
-/* Prompt fixed top left */
-.prompt {
+/* Fixed input line at top */
+.input-line {
   position: fixed;
   top: 10px;
   left: 10px;
-  color: #00ff00;
-  font-weight: bold;
-  user-select: none;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  z-index: 100;
 }
 
-/* Input fixed top, right of prompt */
+/* Prompt styling */
+.prompt {
+  margin-right: 5px;
+  user-select: none;
+  font-weight: bold;
+}
+
+/* Input styling */
 #commandInput {
-  position: fixed;
-  top: 10px;
-  left: 70px; /* space for prompt */
-  right: 10px;
   background: none;
   border: none;
   outline: none;
   box-shadow: none;
   color: #00ff00;
   font: inherit;
+  flex-grow: 1;
   height: 1.5em;
 }
 
-/* Output scrolls below input */
+/* Terminal output area */
 #output {
-  margin-top: 40px; /* space for fixed input */
+  margin-top: 50px; /* space for fixed input line */
   padding: 10px;
-  flex-grow: 1;
   overflow-y: auto;
   white-space: pre-wrap;
   font-family: inherit;
-  height: calc(100vh - 40px);
+  height: calc(100vh - 50px);
 }
