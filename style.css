@@ -1,0 +1,47 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  color: #00ff00;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 16px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Prompt fixed top left */
+.prompt {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: #00ff00;
+  font-weight: bold;
+  user-select: none;
+}
+
+/* Input fixed top, right of prompt */
+#commandInput {
+  position: fixed;
+  top: 10px;
+  left: 70px; /* space for prompt */
+  right: 10px;
+  background: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  color: #00ff00;
+  font: inherit;
+  height: 1.5em;
+}
+
+/* Output scrolls below input */
+#output {
+  margin-top: 40px; /* space for fixed input */
+  padding: 10px;
+  flex-grow: 1;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: inherit;
+  height: calc(100vh - 40px);
+}
