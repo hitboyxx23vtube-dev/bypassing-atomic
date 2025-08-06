@@ -7,11 +7,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let customCommands = {};
   let konochiActive = false;
 
+  // Alias map for commands
+  const aliasMap = {
+    cls: "clear",
+    cmds: "help",
+  };
+
   // Konami Code keyCodes: ↑ ↑ ↓ ↓ ← → ← → B A
   const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
   let konamiIndex = 0;
 
-  // Listen on window for Konami code keys
+  // Listen for Konami code to activate Konochi Mode
   window.addEventListener("keydown", (e) => {
     const key = e.keyCode || e.which;
 
@@ -104,6 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
     typeLine(`🎵 Playing music: ${url}`);
   }
 
+  // Activate Konochi Mode
   function activateKonochiMode() {
     if (!konochiActive) {
       konochiActive = true;
@@ -111,9 +118,14 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.style.backgroundColor = "#111";
       document.body.style.color = "#0ff";
       document.title = "KONOCHI MODE 💮";
+
+      // Add konochi off command when activated
+      customCommands["konochi off"] = "Turns OFF Konochi Mode";
+      typeLine("Command available: konochi off");
     }
   }
 
+  // Deactivate Konochi Mode
   function deactivateKonochiMode() {
     if (konochiActive) {
       konochiActive = false;
@@ -121,6 +133,51 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.style.backgroundColor = "";
       document.body.style.color = "";
       document.title = "Bypassing-Atomic";
+
+      // Remove konochi off command when deactivated
+      if (customCommands["konochi off"]) {
+        delete customCommands["konochi off"];
+      }
+    }
+  }
+
+  async function callAI(prompt) {
+    const apiKey = "AIzaSyCTEJO-_5AtzH50CWRO6p-5vDJ5RbmJ1V0"; // Replace with your own key if needed
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+
+    const body = {
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-goog-api-key": apiKey,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        typeLine(`AI API error: ${errorText}`);
+        return;
+      }
+
+      const data = await response.json();
+      const generatedText = data?.candidates?.[0]?.content || "No content generated.";
+      typeLine(generatedText);
+    } catch (err) {
+      typeLine(`Fetch error: ${err.message}`);
     }
   }
 
@@ -132,13 +189,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const baseCmd = parts[0].toLowerCase();
 
-    // Special: Check for "konochi mode off"
-    if (
-      parts.length === 3 &&
-      parts[0].toLowerCase() === "konochi" &&
-      parts[1].toLowerCase() === "mode" &&
-      parts[2].toLowerCase() === "off"
-    ) {
+    // Map aliases
+    const commandKey = aliasMap[baseCmd] || baseCmd;
+
+    // Handle special konochi off command from customCommands
+    if (cmd.toLowerCase() === "konochi off") {
       if (konochiActive) {
         deactivateKonochiMode();
       } else {
@@ -147,18 +202,19 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    switch (baseCmd) {
+    switch (commandKey) {
       case "help":
         typeLine("Available commands:");
-        typeLine("- help : Show this help message");
-        typeLine("- clear : Clear the terminal output");
+        typeLine("- help (cmds) : Show this help message");
+        typeLine("- clear (cls) : Clear the terminal output");
         typeLine("- playvideo [url] : Play a YouTube or video URL");
         typeLine("- playmusic [url] : Play audio/music URL");
         typeLine("- stop : Stop current media");
         typeLine("- volume [0-100] : Set volume");
         typeLine("- addcmd [name] [response] : Add a custom command");
         typeLine("- konochi : Toggle Konochi Mode ON");
-        typeLine("- konochi mode off : Turn OFF Konochi Mode");
+        if (konochiActive) typeLine("- konochi off : Turn OFF Konochi Mode");
+        typeLine("- ai {prompt} : Ask AI");
         break;
 
       case "clear":
@@ -210,15 +266,23 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
 
       case "konochi":
-        // Toggle Konochi mode on manually (except for "konochi mode off" which is handled above)
         activateKonochiMode();
         break;
 
-      default:
-        if (customCommands[baseCmd]) {
-          typeLine(customCommands[baseCmd]);
+      case "ai":
+        if (parts.length < 2) {
+          typeLine("Usage: ai {prompt}");
         } else {
-          typeLine(`❓ Unknown command: ${baseCmd}`);
+          const prompt = cmd.slice(3).trim();
+          callAI(prompt);
+        }
+        break;
+
+      default:
+        if (customCommands[commandKey]) {
+          typeLine(customCommands[commandKey]);
+        } else {
+          typeLine(`❓ Unknown command: ${commandKey}`);
         }
     }
   }
