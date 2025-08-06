@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function callVoidAI(prompt){
     const thinkingLine = document.createElement("div");
-    thinkingLine.textContent = "🤖 Void is thinking...";
+    thinkingLine.textContent = "🤖 AI is thinking...";
     output.appendChild(thinkingLine);
     output.scrollTop = output.scrollHeight;
 
