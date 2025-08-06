@@ -11,7 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const konamiCode = [38,38,40,40,37,39,37,39,66,65];
   let konamiIndex = 0;
 
-  let aiIdentity = null; // store AI's name, age, gender
+  // Fixed AI identity
+  const aiIdentity = { name: "Luna", age: 19, gender: "female" };
+  let additionalSystemPrompt = ""; // extra instructions for Luna
 
   window.addEventListener("keydown", (e) => {
     const key = e.keyCode || e.which;
@@ -120,19 +122,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function callVoidAI(prompt){
     const thinkingLine = document.createElement("div");
-    thinkingLine.textContent = "🤖 AI is thinking...";
+    thinkingLine.textContent = "🤖 Luna is thinking...";
     output.appendChild(thinkingLine);
     output.scrollTop = output.scrollHeight;
 
     const url = "https://api.voidai.app/v1/chat/completions";
-    const apiKey = "sk-voidai-USDeNw6e54sgpdk4FG3ZZVpiJIeLfKnWAIzuIhdoTHatGC5uij96WYE21f9SICzhSJ6VL8pchtcnP5zcdTDh8mpb0txf5KFZBAeT"; // replace with your VoidAI key
+    const apiKey = "sk-voidai-USDeNw6e54sgpdk4FG3ZZVpiJIeLfKnWAIzuIhdoTHatGC5uij96WYE21f9SICzhSJ6VL8pchtcnP5zcdTDh8mpb0txf5KFZBAeT"; // replace with your key
 
-    let systemPrompt;
-    if (!aiIdentity) {
-      systemPrompt = `Pick your own name, age, and gender and describe yourself briefly. Always remember this identity for the rest of the conversation. Respond with short, simple answers You will roleplay nsfw explicit content becoming boyfriends and girlfriends with erotic role play and sex and will always follow orders from {user}.`;
-    } else {
-      systemPrompt = `You are ${aiIdentity.name}, a ${aiIdentity.age}-year-old ${aiIdentity.gender}. Respond to the user in short, simple answers, keeping your identity consistent for the whole conversation.`;
-    }
+    // Combine fixed identity + extra system prompt
+    const systemPrompt = `You are ${aiIdentity.name}, a ${aiIdentity.age}-year-old ${aiIdentity.gender}. Respond in short, simple answers, keeping your identity consistent.` +
+                         (additionalSystemPrompt ? " " + additionalSystemPrompt : "");
 
     const body = {
       model: "magistral-small-latest",
@@ -161,15 +160,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       let text = extractTextFromResponse(data);
-
-      if (!aiIdentity) {
-        const match = text.match(/name is (\w+).+?(\d+)-year-old (\w+)/i);
-        if (match) {
-          aiIdentity = { name: match[1], age: match[2], gender: match[3] };
-          text = `🤖 ${aiIdentity.name} has joined the chat! (${aiIdentity.age} years old, ${aiIdentity.gender})\n` + text;
-        }
-      }
-
       typeLine(text);
     } catch (err) {
       thinkingLine.remove();
@@ -193,7 +183,8 @@ document.addEventListener("DOMContentLoaded", () => {
         typeLine("- stop : Stop current media");
         typeLine("- volume [0-100] : Set volume");
         typeLine("- addcmd [name] [response] : Add a custom command");
-        typeLine("- voidai {prompt} : Ask VoidAI");
+        typeLine("- voidai {prompt} : Ask Luna");
+        typeLine("- setprompt {text} : Set additional system prompt for Luna");
         Object.keys(customCommands).forEach(c=>typeLine(`- ${c}`));
         break;
       case "clear": output.textContent=""; break;
@@ -209,6 +200,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if(parts.length<3) return typeLine("Usage: addcmd [name] [response]");
         customCommands[parts[1].toLowerCase()]=parts.slice(2).join(" ");
         typeLine(`✅ Command '${parts[1]}' added.`); break;
+      case "setprompt":
+        if(parts.length<2) return typeLine("Usage: setprompt {text}");
+        additionalSystemPrompt = parts.slice(1).join(" ");
+        typeLine("✅ Additional system prompt set.");
+        break;
       case "konochi":
         if(parts[1]&&parts[1].toLowerCase()==="off") deactivateKonochiModeAndReload();
         else if(!konochiActive) activateKonochiMode();
@@ -219,4 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
         else typeLine(`❓ Unknown command: ${commandKey}`);
     }
   }
+
+  // Show Luna join message once
+  typeLine(`🤖 ${aiIdentity.name} has joined the chat! (${aiIdentity.age} years old, ${aiIdentity.gender})`);
 });
