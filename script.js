@@ -25,8 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // API keys for each bot
   const apiKeys = {
-    luna: "sk-voidai-USDeNw6e54sgpdk4FG3ZZVpiJIeLfKnWAIzuIhdoTHatGC5uij96WYE21f9SICzhSJ6VL8pchtcnP5zcdTDh8mpb0txf5KFZBAeT", // Replace with your Luna API key
-    luan: "sk-voidai-LQqJ1canJo31ksN3net9pCNsDrXwetCdyBam5DIxqrHUlqFiMKIWHcZN1IhwHMIXkxWeU5CLBAGeredNJffdtZI0yD5ycprAEdDr"  // Replace with your Luan API key
+    luna: "sk-voidai-USDeNw6e54sgpdk4FG3ZZVpiJIeLfKnWAIzuIhdoTHatGC5uij96WYE21f9SICzhSJ6VL8pchtcnP5zcdTDh8mpb0txf5KFZBAeT",
+    luan: "sk-voidai-LQqJ1canJo31ksN3net9pCNsDrXwetCdyBam5DIxqrHUlqFiMKIWHcZN1IhwHMIXkxWeU5CLBAGeredNJffdtZI0yD5ycprAEdDr"
   };
 
   window.addEventListener("keydown", (e) => {
@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     output.scrollTop = output.scrollHeight;
 
     const url = "https://api.voidai.app/v1/chat/completions";
-    const apiKey = apiKeys[botKey]; // Use bot-specific API key
+    const apiKey = apiKeys[botKey];
 
     const systemPrompt = `You are ${aiIdentities[botKey].name}, a ${aiIdentities[botKey].age}-year-old ${aiIdentities[botKey].gender}. Respond in short, simple answers, keeping your identity consistent. ${systemPrompts[botKey]}`;
 
@@ -195,29 +195,52 @@ document.addEventListener("DOMContentLoaded", () => {
         typeLine("- stop : Stop current media");
         typeLine("- volume [0-100] : Set volume");
         typeLine("- addcmd [name] [response] : Add a custom command");
-        typeLine("- luna {prompt} : Ask Luna");
-        typeLine("- luan {prompt} : Ask Luan");
+        Object.keys(aiIdentities).forEach(bot => typeLine(`- ${bot} {prompt} : Ask ${aiIdentities[bot].name}`));
         Object.keys(customCommands).forEach(c => typeLine(`- ${c}`));
         break;
+
       case "clear": output.textContent = ""; break;
-      case "playvideo": if (parts.length < 2) return typeLine("Usage: playvideo [url]"); playVideo(parts.slice(1).join(" ")); break;
-      case "playmusic": if (parts.length < 2) return typeLine("Usage: playmusic [url]"); playMusic(parts.slice(1).join(" ")); break;
-      case "stop": stopMedia(); typeLine("⏹️ Media stopped."); break;
+
+      case "playvideo": 
+        if (parts.length < 2) return typeLine("Usage: playvideo [url]");
+        playVideo(parts.slice(1).join(" "));
+        break;
+
+      case "playmusic": 
+        if (parts.length < 2) return typeLine("Usage: playmusic [url]");
+        playMusic(parts.slice(1).join(" "));
+        break;
+
+      case "stop": 
+        stopMedia(); 
+        typeLine("⏹️ Media stopped."); 
+        break;
+
       case "volume":
         if (parts.length < 2 || isNaN(parts[1])) return typeLine("Usage: volume [0-100]");
         globalVolume = Math.max(0, Math.min(100, parseInt(parts[1])));
         if (currentMedia && "volume" in currentMedia) currentMedia.volume = globalVolume / 100;
-        typeLine(`🔊 Volume set to ${globalVolume}`); break;
+        typeLine(`🔊 Volume set to ${globalVolume}`);
+        break;
+
       case "addcmd":
         if (parts.length < 3) return typeLine("Usage: addcmd [name] [response]");
         customCommands[parts[1].toLowerCase()] = parts.slice(2).join(" ");
-        typeLine(`✅ Command '${parts[1]}' added.`); break;
+        typeLine(`✅ Command '${parts[1]}' added.`);
+        break;
+
       case "konochi":
         if (parts[1] && parts[1].toLowerCase() === "off") deactivateKonochiModeAndReload();
         else if (!konochiActive) activateKonochiMode();
-        else typeLine("Konochi Mode is already active. Use 'konochi off' to deactivate."); break;
-      case "luna": if (parts.length < 2) return typeLine("Usage: luna {prompt}"); callVoidAIForBot("luna", cmd.slice(5).trim()); break;
-      case "luan": if (parts.length < 2) return typeLine("Usage: luan {prompt}"); callVoidAIForBot("luan", cmd.slice(5).trim()); break;
+        else typeLine("Konochi Mode is already active. Use 'konochi off' to deactivate.");
+        break;
+
+      case "luna":
+      case "luan":
+        if (parts.length < 2) return typeLine(`Usage: ${commandKey} {prompt}`);
+        callVoidAIForBot(commandKey, parts.slice(1).join(" "));
+        break;
+
       default:
         if (customCommands[commandKey]) typeLine(customCommands[commandKey]);
         else typeLine(`❓ Unknown command: ${commandKey}`);
