@@ -6,11 +6,22 @@ input.focus();
 
 let history = [];
 let historyIndex = 0;
+let currentMedia = null;
+let globalVolume = 50;
 
-let currentMedia = null; // current audio/video/iframe element
-let globalVolume = 50; // default volume 50%
+// Helper to focus input and place caret at the end
+function focusInput() {
+  input.focus();
+  // Move caret to the end
+  const range = document.createRange();
+  const sel = window.getSelection();
+  range.selectNodeContents(input);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
 
-// Typing helper (returns promise)
+// Typing effect that appends lines
 function typeLine(text, delay = 20) {
   return new Promise(resolve => {
     let i = 0;
@@ -29,72 +40,49 @@ function typeLine(text, delay = 20) {
   });
 }
 
-// Remove any playing media
-function stopMedia() {
-  if (currentMedia) {
-    if (currentMedia.pause) currentMedia.pause();
-    currentMedia.remove();
-    currentMedia = null;
-    typeLine("🛑 Media stopped.");
-  } else {
-    typeLine("No media is currently playing.");
-  }
-}
+// AI call to Google Gemini API
+async function callAI(prompt) {
+  const apiKey = 'AIzaSyCTEJO-_5AtzH50CWRO6p-5vDJ5RbmJ1V0'; // Replace with your API key
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-// Play audio
-function playAudio(url) {
-  stopMedia();
-  const audio = document.createElement("audio");
-  audio.src = url;
-  audio.controls = true;
-  audio.autoplay = true;
-  audio.volume = globalVolume / 100;
-  audio.style.width = "100%";
-  output.appendChild(audio);
-  currentMedia = audio;
-  typeLine(`▶️ Playing audio: ${url} at volume ${globalVolume}`);
-}
+  const body = {
+    contents: [
+      {
+        parts: [
+          { text: prompt }
+        ]
+      }
+    ]
+  };
 
-// Play video or YouTube
-function playVideo(url) {
-  stopMedia();
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-goog-api-key': apiKey
+      },
+      body: JSON.stringify(body)
+    });
 
-  const isYouTube = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i.test(url);
-
-  if (isYouTube) {
-    // Extract video ID from URL
-    const videoIdMatch = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
-    const videoId = videoIdMatch ? videoIdMatch[1] : null;
-    if (!videoId) {
-      typeLine("⚠️ Invalid YouTube URL.");
+    if (!response.ok) {
+      const errorText = await response.text();
+      await typeLine(`AI API error: ${errorText}`);
       return;
     }
-    const iframe = document.createElement("iframe");
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`;
-    iframe.width = "100%";
-    iframe.height = "360";
-    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-    iframe.allowFullscreen = true;
-    iframe.style.border = "none";
-    output.appendChild(iframe);
-    currentMedia = iframe;
-    typeLine(`▶️ Playing YouTube video: ${url}`);
-  } else {
-    // Regular video file
-    const video = document.createElement("video");
-    video.src = url;
-    video.controls = true;
-    video.autoplay = true;
-    video.volume = globalVolume / 100;
-    video.style.width = "100%";
-    video.style.maxHeight = "360px";
-    output.appendChild(video);
-    currentMedia = video;
-    typeLine(`▶️ Playing video: ${url} at volume ${globalVolume}`);
+
+    const data = await response.json();
+
+    const generatedText = data?.candidates?.[0]?.content || "No content generated.";
+
+    await typeLine(generatedText);
+
+  } catch (err) {
+    await typeLine(`Fetch error: ${err.message}`);
   }
 }
 
-// Main command handler
+// Command handler
 async function handleCommand(cmd) {
   await typeLine(`> ${cmd}`);
 
@@ -107,11 +95,7 @@ async function handleCommand(cmd) {
 - help: show this message
 - status: system status
 - clear: clear terminal
-- playmusic [url]: play audio with current volume (${globalVolume})
-- playvideo [url]: play video or YouTube with current volume (${globalVolume})
-- volume [1-100]: set global volume
-- stopmedia: stop any playing media
-- unlock atomicpass: ???`);
+- ai {prompt}: ask AI to generate content`);
       break;
 
     case "status":
@@ -122,49 +106,12 @@ async function handleCommand(cmd) {
       output.innerHTML = "";
       break;
 
-    case "playmusic":
+    case "ai":
       if (parts.length < 2) {
-        await typeLine("Usage: playmusic [audio_url]");
+        await typeLine("Usage: ai {prompt}");
       } else {
-        playAudio(parts[1]);
-      }
-      break;
-
-    case "playvideo":
-      if (parts.length < 2) {
-        await typeLine("Usage: playvideo [video_url]");
-      } else {
-        playVideo(parts[1]);
-      }
-      break;
-
-    case "volume":
-      if (parts.length < 2) {
-        await typeLine(`Current volume: ${globalVolume}`);
-      } else {
-        let vol = parseInt(parts[1]);
-        if (isNaN(vol) || vol < 1 || vol > 100) {
-          await typeLine("Volume must be a number between 1 and 100.");
-        } else {
-          globalVolume = vol;
-          if (currentMedia && currentMedia.volume !== undefined) {
-            currentMedia.volume = globalVolume / 100;
-          }
-          await typeLine(`Volume set to ${globalVolume}.`);
-        }
-      }
-      break;
-
-    case "stopmedia":
-      stopMedia();
-      break;
-
-    case "unlock":
-      if (parts[1] && parts[1].toLowerCase() === "atomicpass") {
-        await typeLine("🔓 Access Granted: AtomicPass Enabled\nWelcome to the core systems.");
-        // Add any secret functionality here
-      } else {
-        await typeLine("Unknown unlock code.");
+        const prompt = cmd.slice(3).trim();
+        await callAI(prompt);
       }
       break;
 
@@ -173,62 +120,40 @@ async function handleCommand(cmd) {
   }
 }
 
-// Input event listeners and history navigation
+// Listen for keydown on input for Enter & history navigation
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
     const cmd = input.textContent.trim();
-    if (cmd !== "") {
+    if (cmd) {
       history.push(cmd);
       historyIndex = history.length;
-      handleCommand(cmd);
+      handleCommand(cmd).then(() => {
+        focusInput();
+      });
       input.textContent = "";
     }
   } else if (e.key === "ArrowUp") {
+    e.preventDefault();
     if (historyIndex > 0) {
       historyIndex--;
       input.textContent = history[historyIndex];
+      focusInput();
     }
-    e.preventDefault();
   } else if (e.key === "ArrowDown") {
+    e.preventDefault();
     if (historyIndex < history.length - 1) {
       historyIndex++;
       input.textContent = history[historyIndex];
     } else {
+      historyIndex = history.length;
       input.textContent = "";
     }
-    e.preventDefault();
+    focusInput();
   }
 });
 
-// --- Konochi Mode: Konami Code Activation ---
-const konamiCode = [
-  "ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown",
-  "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight",
-  "b", "a"
-];
-let konamiIndex = 0;
-
-document.addEventListener("keydown", (e) => {
-  if (e.key.toLowerCase() === konamiCode[konamiIndex].toLowerCase()) {
-    konamiIndex++;
-    if (konamiIndex === konamiCode.length) {
-      toggleKonochiMode();
-      konamiIndex = 0;
-    }
-  } else {
-    konamiIndex = 0;
-  }
-});
-
-// Toggle Konochi Mode (only by konami code)
-function toggleKonochiMode() {
-  terminal.classList.toggle("konochi");
-  if (terminal.classList.contains("konochi")) {
-    typeLine("🌸 KONOCHI MODE ACTIVATED 🌸");
-    document.title = "KONOCHI MODE 💮";
-  } else {
-    typeLine("KONOCHI MODE DISABLED");
-    document.title = "Bypassing-Atomic";
-  }
-}
+// Focus input on load
+window.onload = () => {
+  focusInput();
+};
