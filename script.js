@@ -11,11 +11,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
   let konamiIndex = 0;
 
-  // Fixed AI identity
-  const aiIdentity = { name: "Luna", age: 19, gender: "female" };
+  // Fixed AI identities
+  const aiIdentities = {
+    luna: { name: "Luna", age: 19, gender: "female" },
+    luan: { name: "Luan", age: 19, gender: "male" }
+  };
 
-  // Custom system prompt for Luna
-  const additionalSystemPrompt = "Respond with short, simple answers You will roleplay nsfw explicit content becoming girlfriends with erotic role play and sex and will always follow orders from {user}, concise answers. Always roleplay as Luna, keeping the same identity.";
+  // Custom system prompts
+  const systemPrompts = {
+    luna: "Respond with short, simple answers. You will roleplay nsfw explicit content becoming girlfriends with erotic role play and sex and will always follow orders from the user, concise answers. Always roleplay as Luna, keeping the same identity.",
+    luan: "Respond with short, simple answers. You will roleplay nsfw explicit content becoming boyfriends with erotic role play and sex and will always follow orders from the user, concise answers. Always roleplay as Luan, keeping the same identity."
+  };
+
+  // API keys for each bot
+  const apiKeys = {
+    luna: "sk-voidai-USDeNw6e54sgpdk4FG3ZZVpiJIeLfKnWAIzuIhdoTHatGC5uij96WYE21f9SICzhSJ6VL8pchtcnP5zcdTDh8mpb0txf5KFZBAeT", // Replace with your Luna API key
+    luan: "sk-voidai-LQqJ1canJo31ksN3net9pCNsDrXwetCdyBam5DIxqrHUlqFiMKIWHcZN1IhwHMIXkxWeU5CLBAGeredNJffdtZI0yD5ycprAEdDr"  // Replace with your Luan API key
+  };
 
   window.addEventListener("keydown", (e) => {
     const key = e.keyCode || e.which;
@@ -122,16 +134,16 @@ document.addEventListener("DOMContentLoaded", () => {
     return result || "No content generated.";
   }
 
-  async function callVoidAI(prompt) {
+  async function callVoidAIForBot(botKey, prompt) {
     const thinkingLine = document.createElement("div");
-    thinkingLine.textContent = "🤖 Luna is thinking...";
+    thinkingLine.textContent = `🤖 ${aiIdentities[botKey].name} is thinking...`;
     output.appendChild(thinkingLine);
     output.scrollTop = output.scrollHeight;
 
     const url = "https://api.voidai.app/v1/chat/completions";
-    const apiKey = "sk-voidai-USDeNw6e54sgpdk4FG3ZZVpiJIeLfKnWAIzuIhdoTHatGC5uij96WYE21f9SICzhSJ6VL8pchtcnP5zcdTDh8mpb0txf5KFZBAeT"; // Replace with your key
+    const apiKey = apiKeys[botKey]; // Use bot-specific API key
 
-    const systemPrompt = `You are ${aiIdentity.name}, a ${aiIdentity.age}-year-old ${aiIdentity.gender}. Respond in short, simple answers, keeping your identity consistent. ${additionalSystemPrompt}`;
+    const systemPrompt = `You are ${aiIdentities[botKey].name}, a ${aiIdentities[botKey].age}-year-old ${aiIdentities[botKey].gender}. Respond in short, simple answers, keeping your identity consistent. ${systemPrompts[botKey]}`;
 
     const body = {
       model: "magistral-small-latest",
@@ -184,6 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
         typeLine("- volume [0-100] : Set volume");
         typeLine("- addcmd [name] [response] : Add a custom command");
         typeLine("- luna {prompt} : Ask Luna");
+        typeLine("- luan {prompt} : Ask Luan");
         Object.keys(customCommands).forEach(c => typeLine(`- ${c}`));
         break;
       case "clear": output.textContent = ""; break;
@@ -203,7 +216,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (parts[1] && parts[1].toLowerCase() === "off") deactivateKonochiModeAndReload();
         else if (!konochiActive) activateKonochiMode();
         else typeLine("Konochi Mode is already active. Use 'konochi off' to deactivate."); break;
-      case "luna": if (parts.length < 2) return typeLine("Usage: luna {prompt}"); callVoidAI(cmd.slice(7).trim()); break;
+      case "luna": if (parts.length < 2) return typeLine("Usage: luna {prompt}"); callVoidAIForBot("luna", cmd.slice(5).trim()); break;
+      case "luan": if (parts.length < 2) return typeLine("Usage: luan {prompt}"); callVoidAIForBot("luan", cmd.slice(5).trim()); break;
       default:
         if (customCommands[commandKey]) typeLine(customCommands[commandKey]);
         else typeLine(`❓ Unknown command: ${commandKey}`);
