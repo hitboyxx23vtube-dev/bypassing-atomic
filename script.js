@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let globalVolume = 50;
   let currentMedia = null;
   let customCommands = {};
+  let konochiActive = false;
 
   // Konami Code keyCodes: ↑ ↑ ↓ ↓ ← → ← → B A
   const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
@@ -103,6 +104,26 @@ document.addEventListener("DOMContentLoaded", () => {
     typeLine(`🎵 Playing music: ${url}`);
   }
 
+  function activateKonochiMode() {
+    if (!konochiActive) {
+      konochiActive = true;
+      typeLine("🎮 Konochi Mode Activated!");
+      document.body.style.backgroundColor = "#111";
+      document.body.style.color = "#0ff";
+      document.title = "KONOCHI MODE 💮";
+    }
+  }
+
+  function deactivateKonochiMode() {
+    if (konochiActive) {
+      konochiActive = false;
+      typeLine("🛑 Konochi Mode Deactivated.");
+      document.body.style.backgroundColor = "";
+      document.body.style.color = "";
+      document.title = "Bypassing-Atomic";
+    }
+  }
+
   function handleCommand(cmd) {
     if (!cmd || cmd.trim() === "") return;
 
@@ -110,6 +131,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (parts.length === 0) return;
 
     const baseCmd = parts[0].toLowerCase();
+
+    // Special: Check for "konochi mode off"
+    if (
+      parts.length === 3 &&
+      parts[0].toLowerCase() === "konochi" &&
+      parts[1].toLowerCase() === "mode" &&
+      parts[2].toLowerCase() === "off"
+    ) {
+      if (konochiActive) {
+        deactivateKonochiMode();
+      } else {
+        typeLine("Konochi mode is not active.");
+      }
+      return;
+    }
 
     switch (baseCmd) {
       case "help":
@@ -121,6 +157,8 @@ document.addEventListener("DOMContentLoaded", () => {
         typeLine("- stop : Stop current media");
         typeLine("- volume [0-100] : Set volume");
         typeLine("- addcmd [name] [response] : Add a custom command");
+        typeLine("- konochi : Toggle Konochi Mode ON");
+        typeLine("- konochi mode off : Turn OFF Konochi Mode");
         break;
 
       case "clear":
@@ -171,6 +209,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         break;
 
+      case "konochi":
+        // Toggle Konochi mode on manually (except for "konochi mode off" which is handled above)
+        activateKonochiMode();
+        break;
+
       default:
         if (customCommands[baseCmd]) {
           typeLine(customCommands[baseCmd]);
@@ -178,11 +221,5 @@ document.addEventListener("DOMContentLoaded", () => {
           typeLine(`❓ Unknown command: ${baseCmd}`);
         }
     }
-  }
-
-  function activateKonochiMode() {
-    typeLine("🎮 Konochi Mode Activated!");
-    document.body.style.backgroundColor = "#111";
-    document.body.style.color = "#0ff";
   }
 });
