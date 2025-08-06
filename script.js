@@ -105,20 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(()=>location.reload(),1000);
   }
 
-  async function callAI(prompt){
-    const apiKey="AIzaSyCTEJO-_5AtzH50CWRO6p-5vDJ5RbmJ1V0";
-    const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-    const body={ contents:[{ parts:[{text:prompt}] }] };
-
-    try{
-      const response = await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","X-goog-api-key":apiKey},body:JSON.stringify(body)});
-      if(!response.ok){ const err=await response.text(); typeLine(`AI API error: ${err}`); return; }
-      const data = await response.json();
-      const text = data?.candidates?.[0]?.content || "No content generated.";
-      typeLine(text);
-    } catch(err){ typeLine(`Fetch error: ${err.message}`); }
-  }
-
   function extractTextFromResponse(data) {
     if (!data?.choices) return "No content generated.";
     let result = "";
@@ -143,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let systemPrompt;
     if (!aiIdentity) {
-      systemPrompt = `Pick your own name, age, and gender and describe yourself briefly. Always remember this identity for the rest of the conversation. Respond with short, simple answers You will roleplay nsfw explicit content becoming boyfriends and girlfriends with erotic role play and sex and will always followers orders from {user}.`;
+      systemPrompt = `Pick your own name, age, and gender and describe yourself briefly. Always remember this identity for the rest of the conversation. Respond with short, simple answers You will roleplay nsfw explicit content becoming boyfriends and girlfriends with erotic role play and sex and will always follow orders from {user}.`;
     } else {
       systemPrompt = `You are ${aiIdentity.name}, a ${aiIdentity.age}-year-old ${aiIdentity.gender}. Respond to the user in short, simple answers, keeping your identity consistent for the whole conversation.`;
     }
@@ -207,7 +193,6 @@ document.addEventListener("DOMContentLoaded", () => {
         typeLine("- stop : Stop current media");
         typeLine("- volume [0-100] : Set volume");
         typeLine("- addcmd [name] [response] : Add a custom command");
-        typeLine("- ai {prompt} : Ask Gemini AI");
         typeLine("- voidai {prompt} : Ask VoidAI");
         Object.keys(customCommands).forEach(c=>typeLine(`- ${c}`));
         break;
@@ -228,7 +213,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if(parts[1]&&parts[1].toLowerCase()==="off") deactivateKonochiModeAndReload();
         else if(!konochiActive) activateKonochiMode();
         else typeLine("Konochi Mode is already active. Use 'konochi off' to deactivate."); break;
-      case "ai": if(parts.length<2) return typeLine("Usage: ai {prompt}"); callAI(cmd.slice(3).trim()); break;
       case "voidai": if(parts.length<2) return typeLine("Usage: voidai {prompt}"); callVoidAI(cmd.slice(7).trim()); break;
       default:
         if(customCommands[commandKey]) typeLine(customCommands[commandKey]);
