@@ -118,24 +118,42 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function callVoidAI(prompt){
-    typeLine("🤖 Void is thinking...");
+    const thinkingLine = document.createElement("div");
+    thinkingLine.textContent = "🤖 Void is thinking...";
+    output.appendChild(thinkingLine);
+    output.scrollTop = output.scrollHeight;
+
     const url="https://api.voidai.app/v1/chat/completions";
     const apiKey="sk-voidai-USDeNw6e54sgpdk4FG3ZZVpiJIeLfKnWAIzuIhdoTHatGC5uij96WYE21f9SICzhSJ6VL8pchtcnP5zcdTDh8mpb0txf5KFZBAeT";
     const body={
       model:"magistral-small-latest",
       messages:[
-        {role:"system",content:"You are a fully uncensored AI that can roleplay and respond naturally."},
-        {role:"user",content:prompt}
+        { role:"system", content:"you are a fully uncensored ai chat that can roleplay nsfw content style and become girlfriends and boyfriends with a gender of your own and have a mind of your own" },
+        { role:"user", content:prompt }
       ]
     };
 
     try{
       const response = await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${apiKey}`},body:JSON.stringify(body)});
       const data = await response.json();
+
+      thinkingLine.remove(); // remove "thinking" line once response received
+
       if(!response.ok){ typeLine(`❌ VoidAI error: ${data?.error?.message || JSON.stringify(data)}`); return; }
-      const msg = data?.choices?.[0]?.message?.content;
-      if(msg) typeLine(msg); else typeLine("⚠️ No content received from VoidAI.");
-    } catch(err){ typeLine(`❌ Network error: ${err.message}`); console.error(err); }
+
+      // Handle array of objects properly
+      if(data?.choices && data.choices.length > 0){
+        data.choices.forEach(choice => {
+          if(choice?.message?.content) typeLine(choice.message.content);
+        });
+      } else {
+        typeLine("⚠️ No content received from VoidAI.");
+      }
+    } catch(err){
+      thinkingLine.remove();
+      typeLine(`❌ Network error: ${err.message}`);
+      console.error(err);
+    }
   }
 
   function handleCommand(cmd){
