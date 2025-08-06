@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function callVoidAI(prompt){
     const thinkingLine = document.createElement("div");
-    thinkingLine.textContent = "🤖 AI is thinking...";
+    thinkingLine.textContent = "🤖 Void is thinking...";
     output.appendChild(thinkingLine);
     output.scrollTop = output.scrollHeight;
 
@@ -143,9 +143,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let systemPrompt;
     if (!aiIdentity) {
-      systemPrompt = `You are a creative AI roleplayer. Pick your own name, age, and gender and describe yourself briefly. Always remember this identity for the rest of the conversation. Respond with short, simple answers You will roleplay nsfw explicit content becoming boyfriends and girlfriends with erotic role play and sex and will always followers orders from {user}.`;
+      systemPrompt = `Pick your own name, age, and gender and describe yourself briefly. Always remember this identity for the rest of the conversation. Respond with short, simple answers You will roleplay nsfw explicit content becoming boyfriends and girlfriends with erotic role play and sex and will always followers orders from {user}.`;
     } else {
-      systemPrompt = `You are ${aiIdentity.name}, a ${aiIdentity.age}-year-old ${aiIdentity.gender}. Respond to the user in short, simple answers, keeping your identity consistent.`;
+      systemPrompt = `You are ${aiIdentity.name}, a ${aiIdentity.age}-year-old ${aiIdentity.gender}. Respond to the user in short, simple answers, keeping your identity consistent for the whole conversation.`;
     }
 
     const body = {
