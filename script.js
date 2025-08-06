@@ -1,46 +1,60 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const output = document.getElementById("output");
   const input = document.getElementById("commandInput");
-  const terminal = document.getElementById("terminal");
+  const output = document.getElementById("output");
 
-  let history = [];
-  let historyIndex = 0;
-  let currentMedia = null;
   let globalVolume = 50;
+  let currentMedia = null;
+  let customCommands = {};
+
+  // Konami Code setup using keyCodes
+  const konamiCodeKeyCodes = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+  let konamiIndex = 0;
+
+  document.addEventListener("keydown", (e) => {
+    if (e.keyCode === konamiCodeKeyCodes[konamiIndex]) {
+      konamiIndex++;
+      if (konamiIndex === konamiCodeKeyCodes.length) {
+        toggleKonochiMode();
+        konamiIndex = 0;
+      }
+    } else {
+      konamiIndex = 0;
+    }
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const command = input.value.trim();
+      if (command !== "") {
+        output.innerHTML += `<div class="command">> ${command}</div>`;
+        handleCommand(command.toLowerCase());
+        input.value = "";
+        output.scrollTop = output.scrollHeight;
+      }
+    }
+  });
 
   function typeLine(text) {
-    output.textContent += text + "\n";
+    const line = document.createElement("div");
+    line.textContent = text;
+    output.appendChild(line);
     output.scrollTop = output.scrollHeight;
   }
 
   function stopMedia() {
     if (currentMedia) {
-      if (currentMedia.pause) currentMedia.pause();
-      currentMedia.remove();
+      currentMedia.pause?.();
+      currentMedia.remove?.();
       currentMedia = null;
-      typeLine("🛑 Media stopped.");
-    } else {
-      typeLine("No media currently playing.");
     }
-  }
-
-  function playAudio(url) {
-    stopMedia();
-    const audio = document.createElement("audio");
-    audio.src = url;
-    audio.controls = true;
-    audio.autoplay = true;
-    audio.volume = globalVolume / 100;
-    audio.style.width = "100%";
-    output.appendChild(audio);
-    currentMedia = audio;
-    typeLine(`▶️ Playing audio: ${url} at volume ${globalVolume}`);
   }
 
   function playVideo(url) {
     stopMedia();
-
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i;
+    let container = document.createElement("div");
+    container.style.marginTop = "10px";
+
     if (youtubeRegex.test(url)) {
       const videoIdMatch = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
       const videoId = videoIdMatch ? videoIdMatch[1] : null;
@@ -56,9 +70,9 @@ document.addEventListener("DOMContentLoaded", () => {
         "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
       iframe.allowFullscreen = true;
       iframe.style.border = "none";
-      output.appendChild(iframe);
-      currentMedia = iframe;
+      container.appendChild(iframe);
       typeLine(`▶️ Playing YouTube video: ${url}`);
+      currentMedia = iframe;
     } else {
       const video = document.createElement("video");
       video.src = url;
@@ -67,193 +81,89 @@ document.addEventListener("DOMContentLoaded", () => {
       video.volume = globalVolume / 100;
       video.style.width = "100%";
       video.style.maxHeight = "360px";
-      output.appendChild(video);
-      currentMedia = video;
+      container.appendChild(video);
       typeLine(`▶️ Playing video: ${url} at volume ${globalVolume}`);
+      currentMedia = video;
     }
+
+    output.appendChild(container);
   }
 
-  async function callAI(prompt) {
-    const apiKey = "AIzaSyCTEJO-_5AtzH50CWRO6p-5vDJ5RbmJ1V0"; // Replace with your key
-    const url =
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-
-    const body = {
-      contents: [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-    };
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-goog-api-key": apiKey,
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        typeLine(`AI API error: ${errorText}`);
-        return;
-      }
-
-      const data = await response.json();
-      const generatedText =
-        data?.candidates?.[0]?.content || "No content generated.";
-      typeLine(generatedText);
-    } catch (err) {
-      typeLine(`Fetch error: ${err.message}`);
-    }
+  function playMusic(url) {
+    stopMedia();
+    const audio = document.createElement("audio");
+    audio.src = url;
+    audio.controls = true;
+    audio.autoplay = true;
+    audio.volume = globalVolume / 100;
+    audio.style.width = "100%";
+    currentMedia = audio;
+    output.appendChild(audio);
+    typeLine(`🎵 Playing music: ${url} at volume ${globalVolume}`);
   }
 
-  async function handleCommand(cmd) {
-    typeLine(`> ${cmd}`);
-    const parts = cmd.trim().split(/\s+/);
-    const baseCmd = parts[0].toLowerCase();
+  function handleCommand(cmd) {
+    const parts = cmd.split(" ");
+    const baseCmd = parts[0];
 
     switch (baseCmd) {
-      case "help":
-        typeLine(`Available Commands:
-- help
-- status
-- clear
-- ai {prompt}
-- playmusic [url]
-- playvideo [url]
-- volume [1-100]
-- stopmedia
-- unlock atomicpass`);
-        break;
-
-      case "status":
-        typeLine("Bypassing... 🔐\nStatus: ATOMIC CORE BREACHED\nEncryption Layers: 0/7");
-        break;
-
-      case "clear":
-        output.textContent = "";
-        break;
-
-      case "ai":
+      case "playvideo":
         if (parts.length < 2) {
-          typeLine("Usage: ai {prompt}");
+          typeLine("Usage: playvideo [url]");
         } else {
-          const prompt = cmd.slice(3).trim();
-          await callAI(prompt);
+          const url = parts.slice(1).join(" ");
+          playVideo(url);
         }
         break;
 
       case "playmusic":
         if (parts.length < 2) {
-          typeLine("Usage: playmusic [audio_url]");
+          typeLine("Usage: playmusic [url]");
         } else {
-          playAudio(parts[1]);
+          const url = parts.slice(1).join(" ");
+          playMusic(url);
         }
         break;
 
-      case "playvideo":
-        if (parts.length < 2) {
-          typeLine("Usage: playvideo [video_url]");
-        } else {
-          playVideo(parts[1]);
-        }
+      case "stop":
+        stopMedia();
+        typeLine("⏹️ Media stopped.");
         break;
 
       case "volume":
-        if (parts.length < 2) {
-          typeLine(`Current volume: ${globalVolume}`);
+        if (parts.length < 2 || isNaN(parts[1])) {
+          typeLine("Usage: volume [0-100]");
         } else {
-          let vol = parseInt(parts[1]);
-          if (isNaN(vol) || vol < 1 || vol > 100) {
-            typeLine("Volume must be a number between 1 and 100.");
-          } else {
-            globalVolume = vol;
-            if (currentMedia && currentMedia.volume !== undefined) {
-              currentMedia.volume = globalVolume / 100;
-            }
-            typeLine(`Volume set to ${globalVolume}.`);
-          }
+          globalVolume = Math.max(0, Math.min(100, parseInt(parts[1])));
+          if (currentMedia) currentMedia.volume = globalVolume / 100;
+          typeLine(`🔊 Volume set to ${globalVolume}`);
         }
         break;
 
-      case "stopmedia":
-        stopMedia();
-        break;
-
-      case "unlock":
-        if (parts[1] && parts[1].toLowerCase() === "atomicpass") {
-          typeLine("🔓 Access Granted: AtomicPass Enabled\nWelcome to the core systems.");
+      case "addcmd":
+        if (parts.length < 3) {
+          typeLine("Usage: addcmd [command] [response]");
         } else {
-          typeLine("Unknown unlock code.");
+          const newCmd = parts[1].toLowerCase();
+          const response = cmd.split(" ").slice(2).join(" ");
+          customCommands[newCmd] = response;
+          typeLine(`✅ Custom command '${newCmd}' added.`);
         }
         break;
 
       default:
-        typeLine("Unknown command. Type 'help' for options.");
+        if (customCommands[baseCmd]) {
+          typeLine(customCommands[baseCmd]);
+        } else {
+          typeLine(`❓ Unknown command: ${baseCmd}`);
+        }
     }
   }
-
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const cmd = input.value.trim();
-      if (cmd) {
-        history.push(cmd);
-        historyIndex = history.length;
-        handleCommand(cmd);
-        input.value = "";
-      }
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (historyIndex > 0) {
-        historyIndex--;
-        input.value = history[historyIndex];
-      }
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (historyIndex < history.length - 1) {
-        historyIndex++;
-        input.value = history[historyIndex];
-      } else {
-        historyIndex = history.length;
-        input.value = "";
-      }
-    }
-  });
-
-  const konamiCode = [
-    "ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown",
-    "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight",
-    "b", "a"
-  ];
-  let konamiIndex = 0;
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key.toLowerCase() === konamiCode[konamiIndex].toLowerCase()) {
-      konamiIndex++;
-      if (konamiIndex === konamiCode.length) {
-        toggleKonochiMode();
-        konamiIndex = 0;
-      }
-    } else {
-      konamiIndex = 0;
-    }
-  });
 
   function toggleKonochiMode() {
-    terminal.classList.toggle("konochi");
-    if (terminal.classList.contains("konochi")) {
-      typeLine("🌸 KONOCHI MODE ACTIVATED 🌸");
-      document.title = "KONOCHI MODE 💮";
-    } else {
-      typeLine("KONOCHI MODE DISABLED");
-      document.title = "Bypassing-Atomic";
-    }
+    typeLine("🎮 Konochi Mode Activated!");
+    // Add your custom mode logic or effects here!
+    document.body.style.backgroundColor = "#222";
+    document.body.style.color = "#0f0";
   }
-
-  input.focus();
 });
