@@ -7,17 +7,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let customCommands = {};
   let konochiActive = false;
 
-  // Alias map for commands
   const aliasMap = {
     cls: "clear",
     cmds: "help",
   };
 
-  // Konami Code keyCodes: ↑ ↑ ↓ ↓ ← → ← → B A
   const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
   let konamiIndex = 0;
 
-  // Listen for Konami code to activate Konochi Mode
   window.addEventListener("keydown", (e) => {
     const key = e.keyCode || e.which;
 
@@ -110,7 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
     typeLine(`🎵 Playing music: ${url}`);
   }
 
-  // Activate Konochi Mode
   function activateKonochiMode() {
     if (!konochiActive) {
       konochiActive = true;
@@ -118,33 +114,24 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.style.backgroundColor = "#111";
       document.body.style.color = "#0ff";
       document.title = "KONOCHI MODE 💮";
-      typeLine("Command available: konochi off");
     }
   }
 
-  // Deactivate Konochi Mode
-  function deactivateKonochiMode() {
-    if (konochiActive) {
-      konochiActive = false;
-      typeLine("🛑 Konochi Mode Deactivated.");
-      document.body.style.backgroundColor = "";
-      document.body.style.color = "";
-      document.title = "Bypassing-Atomic";
-    }
+  function deactivateKonochiModeAndReload() {
+    typeLine("🛑 Konochi Mode Deactivated. Reloading...");
+    setTimeout(() => {
+      location.reload();
+    }, 1000);
   }
 
   async function callAI(prompt) {
-    const apiKey = "AIzaSyCTEJO-_5AtzH50CWRO6p-5vDJ5RbmJ1V0"; // Replace with your own key if needed
+    const apiKey = "AIzaSyCTEJO-_5AtzH50CWRO6p-5vDJ5RbmJ1V0"; // Replace if needed
     const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
     const body = {
       contents: [
         {
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
+          parts: [{ text: prompt }],
         },
       ],
     };
@@ -180,8 +167,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (parts.length === 0) return;
 
     const baseCmd = parts[0].toLowerCase();
-
-    // Map aliases
     const commandKey = aliasMap[baseCmd] || baseCmd;
 
     switch (commandKey) {
@@ -194,11 +179,8 @@ document.addEventListener("DOMContentLoaded", () => {
         typeLine("- stop : Stop current media");
         typeLine("- volume [0-100] : Set volume");
         typeLine("- addcmd [name] [response] : Add a custom command");
-        typeLine("- konochi : Toggle Konochi Mode ON");
-        if (konochiActive) typeLine("- konochi off : Turn OFF Konochi Mode");
         typeLine("- ai {prompt} : Ask AI");
 
-        // List user-added commands
         const userCmds = Object.keys(customCommands);
         if (userCmds.length) {
           typeLine("User commands:");
@@ -254,18 +236,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         break;
 
-      case "konochi":
-        activateKonochiMode();
-        break;
-
       case "konochioff":
       case "konochi-off":
       case "konochi_off":
-        if (konochiActive) {
-          deactivateKonochiMode();
-        } else {
-          typeLine("Konochi mode is not active.");
-        }
+      case "konochi":
+        deactivateKonochiModeAndReload();
         break;
 
       case "ai":
