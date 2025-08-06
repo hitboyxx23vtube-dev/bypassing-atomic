@@ -72,7 +72,8 @@ document.addEventListener("DOMContentLoaded", () => {
       iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`;
       iframe.width = "100%";
       iframe.height = "360";
-      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+      iframe.allow =
+        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
       iframe.allowFullscreen = true;
       iframe.style.border = "none";
       container.appendChild(iframe);
@@ -109,7 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function activateKonochiMode() {
     if (!konochiActive) {
       konochiActive = true;
-      typeLine("🎮 Konochi Mode Activated!... Do konochi off to turn Konochi Mode off");
+      typeLine(
+        "🎮 Konochi Mode Activated! Use 'konochi off' to deactivate."
+      );
       document.body.style.backgroundColor = "#111";
       document.body.style.color = "#0ff";
       document.title = "KONOCHI MODE 💮";
@@ -118,30 +121,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function deactivateKonochiModeAndReload() {
     typeLine("🛑 Konochi Mode Deactivated. Reloading...");
-    setTimeout(() => {
-      location.reload();
-    }, 1000);
+    setTimeout(() => location.reload(), 1000);
   }
 
   async function callAI(prompt) {
-    const apiKey = "AIzaSyCTEJO-_5AtzH50CWRO6p-5vDJ5RbmJ1V0";
-    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+    const apiKey =
+      "AIzaSyCTEJO-_5AtzH50CWRO6p-5vDJ5RbmJ1V0"; // Gemini API key
+    const url =
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
-    const body = {
-      contents: [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-    };
+    const body = { contents: [{ parts: [{ text: prompt }] }] };
 
     try {
       const response = await fetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-goog-api-key": apiKey,
-        },
+        headers: { "Content-Type": "application/json", "X-goog-api-key": apiKey },
         body: JSON.stringify(body),
       });
 
@@ -161,7 +155,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function callVoidAI(prompt) {
     const url = "https://api.voidai.app/v1/chat/completions";
-    const apiKey = "sk-voidai-USDeNw6e54sgpdk4FG3ZZVpiJIeLfKnWAIzuIhdoTHatGC5uij96WYE21f9SICzhSJ6VL8pchtcnP5zcdTDh8mpb0txf5KFZBAeT";
+    const apiKey =
+      "sk-voidai-USDeNw6e54sgpdk4FG3ZZVpiJIeLfKnWAIzuIhdoTHatGC5uij96WYE21f9SICzhSJ6VL8pchtcnP5zcdTDh8mpb0txf5KFZBAeT";
 
     const body = {
       model: "magistral-small-latest",
@@ -178,10 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
         body: JSON.stringify(body),
       });
 
@@ -193,14 +185,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const content = data?.choices?.[0]?.message?.content;
-      if (content) {
-        typeLine(content);
+      const message = data?.choices?.[0]?.message?.content;
+      if (message) {
+        typeLine(message);
       } else {
         typeLine("⚠️ No content received from VoidAI.");
+        console.warn("Raw VoidAI response:", data);
       }
     } catch (err) {
-      typeLine(`❌ Fetch error: ${err.message}`);
+      typeLine(`❌ Network error: ${err.message}`);
+      console.error("VoidAI Fetch Error:", err);
     }
   }
 
@@ -224,11 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
         typeLine("- ai {prompt} : Ask Gemini AI");
         typeLine("- voidai {prompt} : Ask VoidAI");
 
-        const userCmds = Object.keys(customCommands);
-        if (userCmds.length) {
-          typeLine("User commands:");
-          userCmds.forEach((c) => typeLine(`- ${c}`));
-        }
+        Object.keys(customCommands).forEach((c) => typeLine(`- ${c}`));
         break;
 
       case "clear":
@@ -236,21 +226,13 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
 
       case "playvideo":
-        if (parts.length < 2) {
-          typeLine("Usage: playvideo [url]");
-        } else {
-          const url = parts.slice(1).join(" ");
-          playVideo(url);
-        }
+        if (parts.length < 2) return typeLine("Usage: playvideo [url]");
+        playVideo(parts.slice(1).join(" "));
         break;
 
       case "playmusic":
-        if (parts.length < 2) {
-          typeLine("Usage: playmusic [url]");
-        } else {
-          const url = parts.slice(1).join(" ");
-          playMusic(url);
-        }
+        if (parts.length < 2) return typeLine("Usage: playmusic [url]");
+        playMusic(parts.slice(1).join(" "));
         break;
 
       case "stop":
@@ -259,58 +241,37 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
 
       case "volume":
-        if (parts.length < 2 || isNaN(parts[1])) {
-          typeLine("Usage: volume [0-100]");
-        } else {
-          globalVolume = Math.max(0, Math.min(100, parseInt(parts[1])));
-          if (currentMedia && "volume" in currentMedia)
-            currentMedia.volume = globalVolume / 100;
-          typeLine(`🔊 Volume set to ${globalVolume}`);
-        }
+        if (parts.length < 2 || isNaN(parts[1])) return typeLine("Usage: volume [0-100]");
+        globalVolume = Math.max(0, Math.min(100, parseInt(parts[1])));
+        if (currentMedia && "volume" in currentMedia) currentMedia.volume = globalVolume / 100;
+        typeLine(`🔊 Volume set to ${globalVolume}`);
         break;
 
       case "addcmd":
-        if (parts.length < 3) {
-          typeLine("Usage: addcmd [name] [response]");
-        } else {
-          const name = parts[1].toLowerCase();
-          const response = parts.slice(2).join(" ");
-          customCommands[name] = response;
-          typeLine(`✅ Command '${name}' added.`);
-        }
+        if (parts.length < 3) return typeLine("Usage: addcmd [name] [response]");
+        customCommands[parts[1].toLowerCase()] = parts.slice(2).join(" ");
+        typeLine(`✅ Command '${parts[1]}' added.`);
         break;
 
-      case "konochioff":
-      case "konochi-off":
-      case "konochi_off":
       case "konochi":
-        deactivateKonochiModeAndReload();
+        if (parts[1] && parts[1].toLowerCase() === "off") deactivateKonochiModeAndReload();
+        else if (!konochiActive) activateKonochiMode();
+        else typeLine("Konochi Mode is already active. Use 'konochi off' to deactivate.");
         break;
 
       case "ai":
-        if (parts.length < 2) {
-          typeLine("Usage: ai {prompt}");
-        } else {
-          const prompt = cmd.slice(3).trim();
-          callAI(prompt);
-        }
+        if (parts.length < 2) return typeLine("Usage: ai {prompt}");
+        callAI(cmd.slice(3).trim());
         break;
 
       case "voidai":
-        if (parts.length < 2) {
-          typeLine("Usage: voidai {prompt}");
-        } else {
-          const prompt = cmd.slice(7).trim();
-          callVoidAI(prompt);
-        }
+        if (parts.length < 2) return typeLine("Usage: voidai {prompt}");
+        callVoidAI(cmd.slice(7).trim());
         break;
 
       default:
-        if (customCommands[commandKey]) {
-          typeLine(customCommands[commandKey]);
-        } else {
-          typeLine(`❓ Unknown command: ${commandKey}`);
-        }
+        if (customCommands[commandKey]) typeLine(customCommands[commandKey]);
+        else typeLine(`❓ Unknown command: ${commandKey}`);
     }
   }
 });
