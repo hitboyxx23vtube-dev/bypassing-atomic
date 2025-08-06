@@ -1,3 +1,4 @@
+/* =============== BASE TERMINAL STYLING =============== */
 body {
   margin: 0;
   padding: 0;
@@ -8,9 +9,10 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
-/* Fixed input line at top */
+/* Fixed input line at the top */
 .input-line {
   position: fixed;
   top: 10px;
@@ -19,6 +21,7 @@ body {
   display: flex;
   align-items: center;
   z-index: 100;
+  background: transparent;
 }
 
 /* Prompt styling */
@@ -26,6 +29,7 @@ body {
   margin-right: 5px;
   user-select: none;
   font-weight: bold;
+  color: #00ff00;
 }
 
 /* Input styling */
@@ -48,4 +52,44 @@ body {
   white-space: pre-wrap;
   font-family: inherit;
   height: calc(100vh - 50px);
+  scrollbar-width: none; /* Firefox */
+}
+
+#output::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+/* =============== KONOCHI MODE =============== */
+body.konochi {
+  background: radial-gradient(circle at center, #1a0026, #000);
+  color: #ff66cc;
+}
+
+body.konochi .prompt,
+body.konochi #commandInput {
+  color: #ff66cc;
+}
+
+/* Konochi pulse/glow animation */
+.konochi #output,
+.konochi .input-line {
+  animation: pulse 1.5s infinite;
+}
+
+/* Konochi mode text glow */
+@keyframes pulse {
+  0% {
+    text-shadow: 0 0 5px #ff66cc, 0 0 10px #ff66cc;
+  }
+  50% {
+    text-shadow: 0 0 20px #ff66cc, 0 0 30px #ff66cc;
+  }
+  100% {
+    text-shadow: 0 0 5px #ff66cc, 0 0 10px #ff66cc;
+  }
+}
+
+/* Optional transition for smooth mode switching */
+body {
+  transition: background-color 0.5s, color 0.5s;
 }
